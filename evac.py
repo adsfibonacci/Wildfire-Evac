@@ -1,6 +1,7 @@
 import pulp
 import csv
 import random
+import numpy as np
 
 random.seed(100)
 
@@ -9,11 +10,11 @@ prob = pulp.LpProblem('wildfires', pulp.LpMinimize)
 # hi :)
 # Define the number of each node
 evac_count = 31    #N
-transit_count = 10 #M
+transit_count = 9 #M
 
 total_pop = 15000
-region_pop = total_population/4
-evac_pop = region_population / evac_count
+region_pop = total_pop/4
+evac_pop = region_pop / evac_count
 
 # Define the graph network of both evacuation leaves to transits and intertransit travel
 evac_transit = []
@@ -33,11 +34,27 @@ transits = [[int(i) for i in row] for row in reader] #safe node is transit node 
 
 # Start Node | End Node | Travel Time | Capacity | Unsafe Time (if possible)
 
-s = pulp.LpVariable.dicts("s", range(1, evac_count + 1), cat='Integer') # Should have evacuation node count size (N)
-h = pulp.LpVariable.dicts("h", range(1, evac_count + 1), cat='Integer') # Should have transit node count size (N)
-
 # FIXME edit the random length
-prob += max(s[i] + h[i] / evac_pop - min(transits[j][4] - random.randint(1, transits[j][4] + 1) for j in range(1, transit_count + 1)) for i in range(1, evac_count + 1))
+luv = [ random.randint(1, transits[j][4]) for j in range(transit_count)]
+H = int(max(luv[i] for i in range(transit_count)) + region_pop/5)
+w = 1/evac_pop
+
+s = pulp.LpVariable.dicts("s", range(1, evac_count + 1), lowBound=0, upBound=H - evac_pop/5, cat='Integer') # Should have evacuation node count size (N)
+
+h = pulp.LpVariable.dicts("h", range(1, evac_count + 1), lowBound=0, upBound=5, cat='Integer') # Should have transit node count size (N)
+
+d = pulp.LpVariable("d", lowBound=0, cat='Integer')
+ind = pulp.LpVariable.dicts("time-indicator", range(1, evac_count + 1), cat='Binary')
+
+prob += d
+
+for i in range(1, evac_count+1):
+    prob += d >= s[i] + w * h[i] - min( transits[j][4] - luv[j] for j in range(transit_count))
+    for t in range(H):
+        prob += t - s[i] >= 0 - H * (1-ind[i])
+        prob += t - s[i] <= 0 + H * (1-ind[i])
+for i in range(1, evac_count+1):
+    prob += h[i] * ind[i] <= 5
 
 prob.solve()
 
