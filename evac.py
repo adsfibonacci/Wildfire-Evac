@@ -44,19 +44,20 @@ s = pulp.LpVariable.dicts("s", range(1, evac_count + 1), lowBound=0, upBound=H -
 h = pulp.LpVariable.dicts("h", range(1, evac_count + 1), lowBound=0, upBound=5, cat='Integer') # Should have transit node count size (N)
 
 d = pulp.LpVariable("d", lowBound=0, cat='Integer')
-ind = pulp.LpVariable.dicts("time-indicator", range(1, evac_count + 1), cat='Binary')
+ind = pulp.LpVariable.dicts("time-indicator", (range(1, evac_count + 1), range(H)), cat='Binary')
 
 prob += d
 
 for i in range(1, evac_count+1):
     prob += d >= s[i] + w * h[i] - min( transits[j][4] - luv[j] for j in range(transit_count))
     for t in range(H):
-        prob += t - s[i] >= 0 - H * (1-ind[i])
-        prob += t - s[i] <= 0 + H * (1-ind[i])
-for i in range(1, evac_count+1):
-    prob += h[i] <= 5 * ind[i]
+        prob += t - s[i] >= 0 - H * (1-ind[i][t])
+        prob += t - s[i] <= w * h[i] + H * (1-ind[i][t])
 
-prob.solve()
+for i in range(1, evac_count+1):
+    prob += h[i] <= 5 * ind[i][t]
+
+prob.solve(pulp.getSolver('GUROBI'))
 
 for i, p in enumerate(prob.variables()):
     print(p.name, ":", p.varValue)
