@@ -3,26 +3,19 @@ import pulp
 prob = pulp.LpProblem('wildfires', pulp.LpMinimize)
 
 evac_transit = []
-transit_transit = []
-transit_safe = []
+transits = []
 
 with open('evac_transit_flow.csv', newline='') as f:
     reader = csv.reader(f)
     reader = list(reader)
 
-evac_transit = [[int(i) for i in row] for row in reader]
+evac_transit = [[int(i) for i in row] for row in reader] # evac goes to transit nodes, safe node is transit node 1
 
-with open('transit_transit_flow.csv', newline='') as f:
+with open('transits_flow.csv', newline='') as f:
     reader = csv.reader(f)
     reader = list(reader)
 
-transit_transit = [[int(i) for i in row] for row in reader]
-
-with open('transit_safe_flow.csv', newline='') as f:
-    reader = csv.reader(f)
-    reader = list(reader)
-
-transit_safe = [[int(i) for i in row] for row in reader]
+transits = [[int(i) for i in row] for row in reader] #safe node is transit node 1
 
 prob.solve()
 
