@@ -54,7 +54,7 @@ for i in range(1, evac_count+1):
         prob += t - s[i] >= 0 - H * (1-ind[i])
         prob += t - s[i] <= 0 + H * (1-ind[i])
 for i in range(1, evac_count+1):
-    prob += h[i] * ind[i] <= 5
+    prob += h[i] <= 5 * ind[i]
 
 prob.solve()
 
