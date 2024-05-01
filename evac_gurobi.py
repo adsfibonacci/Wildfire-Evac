@@ -2,8 +2,9 @@ from gurobipy import *
 import csv
 import random
 import numpy as np
+import time
 
-random.seed(100)
+start_time = time.time()
 
 # Define the Minimization Problem
 prob = Model('wildfires')
@@ -182,6 +183,7 @@ prob.optimize()
 # prob.solve(pulp.getSolver('GUROBI'))
 
 with open(f'{region}_output.txt', 'w') as outfile:
+    outfile.write('cpu clock time: ' + str(time.time() - start_time))
     if prob.status == GRB.Status.OPTIMAL:
         outfile.write('\n Obj Val: %g\n' % prob.objVal)
         for v in prob.getVars():
